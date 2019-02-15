@@ -1,0 +1,19 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<title>Login</title>
+	</head>
+	<body>
+		<?php
+		# Cierre de posible sesión:
+		session_abort();
+		?>
+		<form method='post' action='devices.php'>
+		Correo: <input type='text' name='correo'/><br>
+		Contraseña: <input type='password' name='passwd'/><br>
+		<input type='submit' value='Enviar'/><br>
+		<input type='reset' value='Borrar campos'/><br>
+		</form>
+		
+	</body>
+</html>
