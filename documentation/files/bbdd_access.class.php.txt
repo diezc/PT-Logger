@@ -1,0 +1,147 @@
+<?php
+
+/*
+ * @project PT_Logger
+ * @file    bbdd_access.class.php
+ * @authors Cesar Martin (@diezc)
+ * @date    09/04/2017
+ * @brief   Classe para acceder a la bbdd.
+ * @version 0.1b
+ */
+
+class bbddAccess {
+    
+    /**
+     * Connects to the Database 
+     *
+     * @param string $bbdd_user MySQL USER
+     * @param string $bbdd_password MySQL Password
+     * @param string $bbdd Database name
+     *
+     * @return array[] mySQL Connection
+     *
+     */
+
+    public function get_bbddConection($bbdd_user, $bbdd_password, $bbdd) {
+        $con = mysqli_connect($bbdd, $bbdd_user, $bbdd_password);
+        if (!$con) {
+            echo "DEBUG: No se ha podido conectar a la base de datos [ conexion() ]";
+            echo mysqli_error($con);
+            exit;
+        } else {
+            return $con;
+        }
+    }
+    
+    /**
+     * Checks if device exists in database
+     *
+     * @param array[] $con MySQL Connection
+     * @param string $bbdd MySQL Database name
+     * @param string $devid Device ID
+     *
+     * @return boolean true if the device exists
+     *
+     */
+
+    public function get_devIDStatus($con, $bbdd, $devid) {
+
+        if (!mysqli_select_db($con, $bbdd)) {
+            echo "DEBUG: unable to select $bbdd";
+            echo mysqli_error($con); //DEBUG;
+            exit;
+        }
+
+        $query = "select * from devices where device_id = '$devid'";
+
+        $resultado = mysqli_query($con, $query);
+
+        if (!$resultado) {
+            echo "DEBUG: unable to check for device id";
+            echo mysqli_error($con); //DEBUG;
+            exit;
+        } else {
+            $num_resultados = mysqli_num_rows($resultado);
+            if ($num_resultados > 0) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+    }
+    
+    /**
+     * Gets Token from database
+     *
+     * @param array[] $con MySQL Connection
+     * @param string $bbdd MySQL Database name
+     * @param string $devid Device ID
+     *
+     * @return string with the device token
+     *
+     */
+
+    public function get_token($con, $bbdd, $devid) {
+        if (!mysqli_select_db($con, $bbdd)) {
+            //echo "DEBUG: Error al seleccionar la base de datos $bbdd";
+            echo mysqli_error($con); //DEBUG;
+            exit;
+        }
+        $query = "select device_token from devices where device_id = '$devid'";
+        $resultado = mysqli_query($con, $query);
+        if (!$resultado) {
+            //echo "DEBUG: unable to obtain token ]";
+            echo mysqli_error($con); //DEBUG;
+            exit;
+        } else {
+            $num_resultados = mysqli_num_rows($resultado);
+            if ($num_resultados == 1) {
+                $fila = mysqli_fetch_assoc($resultado);
+                return $fila['device_token'];
+            } else {
+                //echo "DEBUG: more than one token retrived";
+                exit;
+            }
+        }
+    }
+
+    /**
+     * Checks if device exists in database
+     *
+     * @param array[] $con MySQL Connection
+     * @param string $bbdd MySQL Database name
+     * @param int $value_type the type of value that will be queried to the cloud
+     *
+     * @return string with the name of the value type as used by the cloud engine
+     *
+     */
+    
+    public function get_variableName($con, $bbdd, $value_type) {
+        if (!mysqli_select_db($con, $bbdd)) {
+            echo "DEBUG: unable to select $bbdd";
+            echo mysqli_error($con); //DEBUG;
+            exit;
+        }
+        $query="select variable_name from value_types where type_id = '$value_type'";
+        $resultado = mysqli_query($con, $query);
+        if (!$resultado) {
+            //echo "DEBUG: unable run query update_vaule";
+            echo mysqli_error($con); //DEBUG;
+            exit;
+        } else {
+            $num_resultados = mysqli_num_rows($resultado);
+            if ($num_resultados == 1) {
+                $fila = mysqli_fetch_assoc($resultado);
+                return $fila['variable_name'];
+            } else {
+                echo "DEBUG: more than one variable type retrived";
+                exit;
+            }
+        }
+        
+    }
+
+   
+}
+
+?>

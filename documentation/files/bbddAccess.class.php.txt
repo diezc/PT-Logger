@@ -1,0 +1,203 @@
+<?php
+
+/**
+ * Archivo con la clase principal para la gestion de los accesos a la bbdd. 
+ * 
+ * @project PT_Logger
+ * @file    bbddAccess.class.php
+ * @authors Cesar Martin (@diezc)
+ * @date    09/04/2017
+ */
+
+/**
+ * Clase bbddAccess para acceder a la base de datos.
+ * 
+ * @project ptloggerMngr
+ * @file    bbddAccess.class.php
+ * @authors Cesar Martin (@diezc)
+ * @date    09/04/2017
+ * @brief   Classe para acceder a la bbdd.
+ * @version 3
+ */
+class ptloggerMngr {
+
+    private $_bbdd_user = "";
+    private $_bbdd_password = "";
+    private $_bbdd_server = "";
+    private $_bbdd = "";
+    private $_con;
+    
+    /**
+     * Class constructor 
+     *
+     * @param $bbdd_user MySQL user
+     * @param $bbdd_password MySQL password
+     * @param $bbdd_server MySQL server
+     * @param $bbdd  MySQL Database
+     * 
+     * @return void
+     *
+     */
+    public function __construct($bbdd_user, $bbdd_password, $bbdd_server, $bbdd) {
+        $this->_bbdd_user = $bbdd_user;
+        $this->_bbdd_password = $bbdd_password;
+        $this->_bbdd_server = $bbdd_server;
+        $this->_bbdd = $bbdd;
+    }
+    
+    
+
+    /**
+     * Sets database connection private property
+     *
+     * @return boolean mySQL Connection true for good connection, false for bad connection; 
+     *
+     */
+    public function set_bbddConection() {
+        $this->_con = mysqli_connect($this->_bbdd_server, $this->_bbdd_user, $this->_bbdd_password);
+        if (!$this->_con) {
+            echo mysqli_error($this->_con);
+            return false;
+        } else {
+            return true;
+        }
+    }
+    
+    /**
+     * Closes database connection
+     *
+     * @return boolean true if successful false if otherwise  
+     *
+     */
+    public function close_bbddConection() {
+        return mysqli_close($this->_con);
+    }
+
+    /**
+     * Checks if device exists in database
+     *
+     * @param string $devid Device ID
+     *
+     * @return boolean true if the device exists
+     *
+     */
+    public function get_devIDStatus($devid) {
+
+        if (!mysqli_select_db($this->_con, $this->_bbdd)) {
+            echo "DEBUG: unable to select $this->_bbdd </br>";
+            echo mysqli_error($this->_con); //DEBUG;
+            exit;
+        }
+
+        $query = "select * from devices where device_id = '$devid'";
+
+        $resultado = mysqli_query($this->_con, $query);
+
+        if (!$resultado) {
+            echo "DEBUG: unable to check for device id </br>";
+            echo mysqli_error($this->_con); //DEBUG;
+            exit;
+        } else {
+            $num_resultados = mysqli_num_rows($resultado);
+            if ($num_resultados > 0) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+    }
+
+    /**
+     * Gets Token from database
+     *
+     * @param string $devid Device ID
+     *
+     * @return string with the device token
+     *
+     */
+    public function get_token($devid) {
+        if (!mysqli_select_db($this->_con, $this->_bbdd)) {
+            //echo "DEBUG: Error al seleccionar la base de datos $bbdd";
+            echo mysqli_error($this->_con); //DEBUG;
+            exit;
+        }
+        $query = "select device_token from devices where device_id = '$devid'";
+        $resultado = mysqli_query($this->_con, $query);
+        if (!$resultado) {
+            //echo "DEBUG: unable to obtain token ]";
+            echo mysqli_error($this->_con); //DEBUG;
+            exit;
+        } else {
+            $num_resultados = mysqli_num_rows($resultado);
+            if ($num_resultados == 1) {
+                $fila = mysqli_fetch_assoc($resultado);
+                return $fila['device_token'];
+            } else {
+                //echo "DEBUG: more than one token retrived";
+                exit;
+            }
+        }
+    }
+
+    /**
+     * Checks if device exists in database
+     *
+     * @param int $value_type the type of value that will be queried to the cloud
+     *
+     * @return string with the name of the value type as used by the cloud engine
+     *
+     */
+    public function get_variableName($value_type) {
+        if (!mysqli_select_db($this->_con, $this->_bbdd)) {
+            echo "DEBUG: unable to select $this->_bbdd";
+            echo mysqli_error($this->_con); //DEBUG;
+            exit;
+        }
+        $query = "select variable_name from value_types where type_id = '$value_type'";
+        $resultado = mysqli_query($this->_con, $query);
+        if (!$resultado) {
+            //echo "DEBUG: unable run query update_vaule";
+            echo mysqli_error($this->_con); //DEBUG;
+            exit;
+        } else {
+            $num_resultados = mysqli_num_rows($resultado);
+            if ($num_resultados == 1) {
+                $fila = mysqli_fetch_assoc($resultado);
+                return $fila['variable_name'];
+            } else {
+                echo "DEBUG: more than one variable type retrived";
+                exit;
+            }
+        }
+    }
+    
+    /**
+     * Adds data value to the database
+     *
+     * @param int $value_type the type of value that will be queried to the cloud
+     * @param double $value The value to be added. 
+     * @param string $devID The ID of the device producing the data point. 
+     *
+     * @return void
+     *
+     */
+    public function set_dataValues($value_type, $value, $deviceID){
+        if (!mysqli_select_db($this->_con, $this->_bbdd)) {
+            echo "DEBUG: unable to select $this->_bbdd";
+            echo mysqli_error($this->_con); //DEBUG;
+            exit;
+        }
+        $query = "INSERT INTO logged_values (device_id, value_type, value_data, value_date) VALUES ('$deviceID', '$value_type', '$value', NOW())";
+        $resultado = mysqli_query($this->_con, $query);
+        if (!$resultado) {
+            echo "DEBUG: unable run query set_dataValues";
+            echo mysqli_error($this->_con); //DEBUG;
+            exit;
+        } else {
+            return;
+        }
+    }
+
+}
+
+?>
